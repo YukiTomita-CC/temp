@@ -7,10 +7,10 @@ def main(model_name):
         print("model_name must be one of 'calm3', 'tanuki', 'qwen'.")
         return
     
-    model_name = f"models/{model_name}"
+    model_path = f"models/{model_name}"
 
-    model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", torch_dtype="auto")
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", torch_dtype="auto")
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
 
     import json
 
@@ -110,7 +110,11 @@ def main(model_name):
                                 )
 
     for i, output_id in enumerate(output_ids):
+        print(f"Generating output {i}...")
         text = tokenizer.decode(output_id[input_ids.shape[-1]:], skip_special_tokens=True)
+
+        import os
+        os.makedirs(f"outputs/{model_name}", exist_ok=True)
 
         with open(f"outputs/{model_name}/output_{i}.txt", "w") as f:
             f.write(text)
