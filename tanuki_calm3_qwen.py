@@ -9,7 +9,11 @@ def main(model_name):
     
     model_path = f"models/{model_name}"
 
-    model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", torch_dtype="auto")
+    trust_remote_code = False
+    if model_name == "tanuki":
+        trust_remote_code = True
+
+    model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", torch_dtype="auto", trust_remote_code=trust_remote_code)
     tokenizer = AutoTokenizer.from_pretrained(model_path)
 
     import json
