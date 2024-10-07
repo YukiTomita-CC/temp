@@ -2,6 +2,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import argparse
 import os
+from tqdm.contrib import tenumerate
 
 def main(theme):
     parser = argparse.ArgumentParser(description="Generate text using a pretrained model with custom attributes.")
@@ -164,8 +165,7 @@ Assistant: そういうことか🤣まあでももうちょっと様子見よ�
     existing_files = [f for f in os.listdir(output_dir) if f.endswith('.txt')]
     next_file_number = len(existing_files)
 
-    for i, output_id in enumerate(output_ids):
-        print(f"Generating output {i}...")
+    for i, output_id in tenumerate(output_ids):
         text = tokenizer.decode(output_id[input_ids.shape[-1]:], skip_special_tokens=True)
 
         attribute_text = (
