@@ -3,9 +3,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import argparse
 import os
 from tqdm import tqdm
-from tqdm.contrib import tenumerate
 
-def main(theme):
+
+def main(theme, model, tokenizer):
     parser = argparse.ArgumentParser(description="Generate text using a pretrained model with custom attributes.")
     
     parser.add_argument('--theme', type=str, required=True, help="Prompt theme")
@@ -20,10 +20,6 @@ def main(theme):
     parser.add_argument('--creativity', type=int, default=0, choices=range(5), help="Creativity of the response (0-4)")
 
     args = parser.parse_args()
-
-    model_path = f"models/karakuri"
-    model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", torch_dtype="auto")
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
 
     prompt = f"""# 指示:
 
@@ -189,6 +185,10 @@ Assistant: そういうことか🤣まあでももうちょっと様子見よ�
 
 
 if __name__ == "__main__":
+    model_path = f"models/karakuri"
+    model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", torch_dtype="auto")
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    
     with open("talk_theme.txt") as f:
         for line in tqdm(f):
-            main(line.strip())
+            main(line.strip(), model, tokenizer)
