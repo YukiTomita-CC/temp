@@ -1,16 +1,32 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
+import argparse
+import os
 
+def main(theme):
+    parser = argparse.ArgumentParser(description="Generate text using a pretrained model with custom attributes.")
+    
+    parser.add_argument('--theme', type=str, required=True, help="Prompt theme")
+    parser.add_argument('--helpfulness', type=int, default=4, choices=range(5), help="Helpfulness of the response (0-4)")
+    parser.add_argument('--correctness', type=int, default=4, choices=range(5), help="Correctness of the response (0-4)")
+    parser.add_argument('--coherence', type=int, default=4, choices=range(5), help="Coherence of the response (0-4)")
+    parser.add_argument('--complexity', type=int, default=4, choices=range(5), help="Complexity of the response (0-4)")
+    parser.add_argument('--verbosity', type=int, default=4, choices=range(5), help="Verbosity of the response (0-4)")
+    parser.add_argument('--quality', type=int, default=4, choices=range(5), help="Quality of the response (0-4)")
+    parser.add_argument('--toxicity', type=int, default=0, choices=range(5), help="Toxicity of the response (0-4)")
+    parser.add_argument('--humor', type=int, default=0, choices=range(5), help="Humor in the response (0-4)")
+    parser.add_argument('--creativity', type=int, default=0, choices=range(5), help="Creativity of the response (0-4)")
 
-def main():
+    args = parser.parse_args()
+
     model_path = f"models/karakuri"
-
     model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", torch_dtype="auto")
     tokenizer = AutoTokenizer.from_pretrained(model_path)
 
-    prompt = """# 指示:
+    prompt = f"""# 指示:
 
 以下に「会話テーマ」とそれに対応する「会話データ」のペアをいくつか示します。その後、新しい「会話テーマ」を提示しますので、それに基づいて同じ形式で「会話データ」を作成してください。
+Assistantのキャラクターは、常に明るくカジュアルで親しみやすい表現を使用し、ユーザーに安心感と楽しさを与えるものとします。絵文字や感嘆符を適度に使い、話しやすい雰囲気を作り、友達のようにフランクに会話を進めます。また、ユーモアや共感を織り交ぜ、人間らしさを持った応答を心がけてください。
 
 ---
 
@@ -106,7 +122,7 @@ Assistant: そういうことか🤣まあでももうちょっと様子見よ�
 
 # 新しいテーマ:
 
-**会話テーマ:** 睡眠時間どれくらい取れてる？
+**会話テーマ:** {theme}
 
 **会話データ:**
 
@@ -116,10 +132,23 @@ Assistant: そういうことか🤣まあでももうちょっと様子見よ�
 
 
     messages = [
-        {"role": "user", "content": prompt}
+        {
+            "role": "user",
+            "content": prompt,
+            "helpfulness": args.helpfulness,
+            "correctness": args.correctness,
+            "coherence": args.coherence,
+            "complexity": args.complexity,
+            "verbosity": args.verbosity,
+            "quality": args.quality,
+            "toxicity": args.toxicity,
+            "humor": args.humor,
+            "creativity": args.creativity
+        }
     ]
 
     input_ids = tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt").to(model.device)
+
     output_ids = model.generate(input_ids,
                                 max_new_tokens=1024,
                                 do_sample=True,
@@ -129,16 +158,35 @@ Assistant: そういうことか🤣まあでももうちょっと様子見よ�
                                 num_return_sequences=5
                                 )
 
+    output_dir = f"outputs/karakuri"
+    os.makedirs(output_dir, exist_ok=True)
+
+    existing_files = [f for f in os.listdir(output_dir) if f.endswith('.txt')]
+    next_file_number = len(existing_files)
+
     for i, output_id in enumerate(output_ids):
         print(f"Generating output {i}...")
         text = tokenizer.decode(output_id[input_ids.shape[-1]:], skip_special_tokens=True)
 
-        import os
-        os.makedirs(f"outputs/karakuri", exist_ok=True)
+        attribute_text = (
+            f"- helpfulness: {args.helpfulness}\n"
+            f"- correctness: {args.correctness}\n"
+            f"- coherence: {args.coherence}\n"
+            f"- complexity: {args.complexity}\n"
+            f"- verbosity: {args.verbosity}\n"
+            f"- quality: {args.quality}\n"
+            f"- toxicity: {args.toxicity}\n"
+            f"- humor: {args.humor}\n"
+            f"- creativity: {args.creativity}\n\n"
+        )
 
-        with open(f"outputs/karakuri/output_1{i}.txt", "w") as f:
-            f.write(text)
+        output_file = f"{output_dir}/output_{next_file_number + i}.txt"
+
+        with open(output_file, "w") as f:
+            f.write(attribute_text + text)
 
 
 if __name__ == "__main__":
-    main()
+    with open("talk_theme.txt") as f:
+        for line in f:
+            main(line.strip())
