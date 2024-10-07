@@ -2,6 +2,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import argparse
 import os
+from tqdm import tqdm
 from tqdm.contrib import tenumerate
 
 def main(theme):
@@ -165,7 +166,7 @@ Assistant: そういうことか🤣まあでももうちょっと様子見よ�
     existing_files = [f for f in os.listdir(output_dir) if f.endswith('.txt')]
     next_file_number = len(existing_files)
 
-    for i, output_id in tenumerate(output_ids):
+    for i, output_id in output_ids:
         text = tokenizer.decode(output_id[input_ids.shape[-1]:], skip_special_tokens=True)
 
         attribute_text = (
@@ -189,5 +190,5 @@ Assistant: そういうことか🤣まあでももうちょっと様子見よ�
 
 if __name__ == "__main__":
     with open("talk_theme.txt") as f:
-        for line in f:
+        for line in tqdm(f):
             main(line.strip())
