@@ -169,6 +169,7 @@ Assistant: そういうことか🤣まあでももうちょっと様子見よ�
         text = tokenizer.decode(output_id[input_ids.shape[-1]:], skip_special_tokens=True)
 
         attribute_text = (
+            f"- theme: {theme}\n"
             f"- helpfulness: {args.helpfulness}\n"
             f"- correctness: {args.correctness}\n"
             f"- coherence: {args.coherence}\n"
